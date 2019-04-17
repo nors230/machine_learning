@@ -7,7 +7,6 @@ Nora Hajjar
 '''
 import numpy as np
 import pandas as pd 
-import util
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import metrics
@@ -44,25 +43,38 @@ def get_summary_statistics(df):
 	pass
 
 
-
 ####PRE-PROCESS/CLEAN_DATA####
-def get_nulls(df):
+def check_null_counts(df):
 	'''
+	Input df, find nulls
+	Return list of null_cols
 	'''
 	return df.isnull().sum()
 
 
-def fill_nas(df, col_name):
+def get_null_cols(df):
 	'''
-	'''
-	
+	Input df, find nulls
 
+	Return list of null_cols
+	'''
+	null_cols = []
+
+	null_cols = df.isnull().sum()
+
+	if len(null_cols) > 0:
+		return null_cols
+
+
+def fill_null_cols(df, null_cols):
+	'''
+	Input df and list of null cols
+	Calc mean for the column, fill NAs with the mean
+	Return: updated df 
+	'''
+	for col in null_cols:
+		df.col.fillna(df.col.mean(), inplace=True)
 	return df
-	
-
-
-
-
 
 
 ####GENERATE-FEATURES/PREDICTORS####
