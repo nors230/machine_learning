@@ -22,9 +22,15 @@ def load_data(filename):
 
 
 ####EXPLORE_DATA####
-def explore_data(df):
+def get_distribution(df):
 	'''
 	break this into chunks
+	'''
+	pass
+
+
+def get_outliers(df):
+	'''
 	'''
 	pass
 
@@ -38,18 +44,24 @@ def get_summary_statistics(df):
 	pass
 
 
+
 ####PRE-PROCESS/CLEAN_DATA####
-def fill_nas(df):
+def get_nulls(df):
 	'''
 	'''
-	pass
+	return df.isnull().sum()
+
+
+def fill_nas(df, col_name):
+	'''
+	'''
+	
+
+	return df
 	
 
 
-def clean_data(df):
-	'''
-	'''
-	pass 
+
 
 
 
