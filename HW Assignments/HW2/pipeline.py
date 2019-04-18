@@ -11,8 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import metrics
 
-####READ/LOAD_DATA####
-def load_data(filename):
+
+####READ/LOAD_DATA####  DONE
+def load_data(filename):  
 	'''
 	Load data from a csv to pandas df
 	'''
@@ -43,27 +44,27 @@ def get_summary_statistics(df):
 	pass
 
 
-####PRE-PROCESS/CLEAN_DATA####
+####PRE-PROCESS/CLEAN_DATA####  DONE
 def check_null_counts(df):
 	'''
 	Input df, find nulls
 	Return list of null_cols
 	'''
-	return df.isnull().sum()
+	null_counts = df.isnull().sum()
+	return null_counts
 
 
-def get_null_cols(df):
+def get_null_cols(df, null_counts):
 	'''
 	Input df, find nulls
 
 	Return list of null_cols
 	'''
 	null_cols = []
-
-	null_cols = df.isnull().sum()
-
-	if len(null_cols) > 0:
-		return null_cols
+	for index, val in null_counts.iteritems():
+		if val > 0:
+			null_cols.append(index)
+	return null_cols
 
 
 def fill_null_cols(df, null_cols):
@@ -73,19 +74,20 @@ def fill_null_cols(df, null_cols):
 	Return: updated df 
 	'''
 	for col in null_cols:
-		df.col.fillna(df.col.mean(), inplace=True)
-	return df
+		df[col].fillna(df[col].mean(), inplace=True)
 
 
 ####GENERATE-FEATURES/PREDICTORS####
-def convert_var_cont_to_disc(df, var_name):
+def convert_var_cont_to_disc(df, var_name, bins):
 	'''
-	Convert one variable at a time from continuous to discreet 
-	Returns: updated df w/ converted column
-	'''
-	pass
+	Convert one variable at a time from continuous to discreet. 
+	We are binning/bucketing continuous data into discreet chunks 
+	to use as ordinal categorical variables
+	use pd.cut
 
-	return df
+	Returns: none, column is update 
+	'''
+	df[var_name] = pd.cut(df[var_name], bins)
 
 
 def convert_var_cat_to_bin(df, var_name):
@@ -93,8 +95,16 @@ def convert_var_cat_to_bin(df, var_name):
 	Convert one variable at a time form categorical to binary 
 	Returns: updated df with converted column
 	'''
-	pass
 
+
+	
+
+
+
+
+
+
+	pass
 	return df
 
 
@@ -132,15 +142,58 @@ def evaluate_classifier():
 	pass
 
 
-#minimum functions to include:
+#################################################################
+#MAP #minimum functions to include:
 #1) Read/Load Data - DONE
-#2) Explore Data
-#3) Pre-Process and Clean Data
-#4) Generate Features/Predictors - DONE
+
+#2) Explore Data - DO THIS LAST -
+	#distributions of variables
+	#correlations of variables
+	#find outliers
+	#data summaries
+
+#3) Pre-Process and Clean Data - DONE
+	#fill in missing values, use mean to fill in
+
+#4) Generate Features/Predictors 
+	#write function for continuous --> discreet variable
+	#write function for categorical --> binary variable
+	#apply each function to at least one variable each in the current data set
+
 #5) Build Machine Learning Classifier
+	#select classifier - decision trees
+
 #6) Evaluate Classifier
+	#use any metric
+	#also use accuracy
+	#can evaluate on same data (but bad form)
 
 
+
+
+
+
+
+
+#OUTSTANDING TO-DOS:
+#2) Explore Data - DO THIS LAST -
+	#distributions of variables
+	#correlations of variables
+	#find outliers
+	#data summaries
+
+#4) Generate Features/Predictors 
+	#write function for continuous --> discreet variable
+	#write function for categorical --> binary variable
+	#apply each function to at least one variable each in the current data set
+
+#5) Build Machine Learning Classifier
+	#select classifier - decision trees
+
+#6) Evaluate Classifier
+	#use any metric
+	#also use accuracy
+	#can evaluate on same data (but bad form)
 
 
 
