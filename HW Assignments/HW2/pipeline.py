@@ -78,43 +78,33 @@ def fill_null_cols(df, null_cols):
 
 
 ####GENERATE-FEATURES/PREDICTORS####
-def convert_var_cont_to_disc(df, var_name, bins):
+def convert_var_cont_to_disc(df, new_col, var_name, bins, labels):
 	'''
 	Convert one variable at a time from continuous to discreet. 
 	We are binning/bucketing continuous data into discreet chunks 
 	to use as ordinal categorical variables
 	use pd.cut
 
-	Returns: none, column is update 
+	Returns: none, creates a new column 
 	'''
-	df[var_name] = pd.cut(df[var_name], bins)
+	df[new_col] = pd.cut(df[var_name], bins=bins, labels=labels)
 
 
-def convert_var_cat_to_bin(df, var_name):
+def convert_var_cat_to_bin(df, new_col, var_name, var0, var1):
 	'''
 	Convert one variable at a time form categorical to binary 
-	Returns: updated df with converted column
+	Returns: none, creates a new column in the df
 	'''
+	df[new_col] = df[var_name].map({var0:0, var1:1})
 
 
-	
-
-
-
-
-
-
-	pass
-	return df
-
-
-def split_data(df, pred_vars, dep_var):
+def split_data(df, pred_vars, dep_var, test_size=0.25, random_state=1):
 	'''
 	Choose predictors and dependent variables, create train/test data splits
 	'''
 	X = df[pred_vars]
 	y = df[dep_var]
-	X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
+	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size, random_state)
 	return X_train, X_test, y_train, y_test
  
 
@@ -156,8 +146,8 @@ def evaluate_classifier():
 	#fill in missing values, use mean to fill in
 
 #4) Generate Features/Predictors 
-	#write function for continuous --> discreet variable
-	#write function for categorical --> binary variable
+	#write function for continuous --> discreet variable - DONE
+	#write function for categorical --> binary variable - DONE
 	#apply each function to at least one variable each in the current data set
 
 #5) Build Machine Learning Classifier
@@ -173,7 +163,7 @@ def evaluate_classifier():
 
 
 
-
+###################################################
 
 #OUTSTANDING TO-DOS:
 #2) Explore Data - DO THIS LAST -
@@ -183,8 +173,6 @@ def evaluate_classifier():
 	#data summaries
 
 #4) Generate Features/Predictors 
-	#write function for continuous --> discreet variable
-	#write function for categorical --> binary variable
 	#apply each function to at least one variable each in the current data set
 
 #5) Build Machine Learning Classifier
