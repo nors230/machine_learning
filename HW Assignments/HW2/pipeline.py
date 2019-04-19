@@ -1,54 +1,80 @@
 '''
 CAPP30254-ML: HW 2 - Machine Learning Pipeline
 
-Code for Machine Learning Pipeline
+Code for Machine Learning Pipeline Version 1
 
 Nora Hajjar
 '''
 import numpy as np
 import pandas as pd 
+import matplotlib
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.externals.six import StringIO  
+from IPython.display import Image  
+from sklearn.tree import export_graphviz
+import pydotplus
+from sklearn.model_selection import cross_val_score
 
 
-####READ/LOAD_DATA####  DONE
+####1)READ/LOAD_DATA####
 def load_data(filename):  
 	'''
 	Load data from a csv to pandas df
+
+	Inputs: filename
+
+	Returns: pandas df
 	'''
 	df = pd.read_csv(filename)
 	return df
 
 
-####EXPLORE_DATA####
-def get_distribution(df):
+####2)EXPLORE_DATA####
+def get_sum_stats(df):
 	'''
-	break this into chunks
+	Generate summary statistics of dataframe
+
+	Inputs: df
+
+	Returns: summary statistics
 	'''
-	pass
+	return df.describe()
+
+
+def get_hist(df):
+	'''
+	Generate histogram of datafame
+
+	Inputs: df
+
+	Returns: histogram image of data
+	'''
+	return df.hist()
 
 
 def get_outliers(df):
 	'''
+	Generate boxplot to see outliers in the data
+
+	Inputs: df
+
+	Returns: boxplot
 	'''
-	pass
+	return df.boxplot()
 
 
-def get_summary_statistics(df):
-	'''
-	model this after:
-	https://mit.cs.uchicago.edu/capp30121-aut-18/nhajjar/blob/pa6-grading/pa6/traffic_stops.py
-
-	'''
-	pass
-
-
-####PRE-PROCESS/CLEAN_DATA####  DONE
+####3)PRE-PROCESS/CLEAN_DATA####  DONE
 def check_null_counts(df):
 	'''
-	Input df, find nulls
-	Return list of null_cols
+	Get null counts in dataframe
+
+	Inputs: df
+
+	Returns: null counts
 	'''
 	null_counts = df.isnull().sum()
 	return null_counts
@@ -56,9 +82,11 @@ def check_null_counts(df):
 
 def get_null_cols(df, null_counts):
 	'''
-	Input df, find nulls
+	Get null columns in dataframe
 
-	Return list of null_cols
+	Inputs: df
+
+	Returns: list of null columns
 	'''
 	null_cols = []
 	for index, val in null_counts.iteritems():
@@ -69,123 +97,127 @@ def get_null_cols(df, null_counts):
 
 def fill_null_cols(df, null_cols):
 	'''
-	Input df and list of null cols
-	Calc mean for the column, fill NAs with the mean
-	Return: updated df 
+	Fill null columns in the dataframe with the mean of the column
+
+	Inputs: df, list of null columns
+
+	Returns: none, updates the dataframe in place 
 	'''
 	for col in null_cols:
 		df[col].fillna(df[col].mean(), inplace=True)
 
 
-####GENERATE-FEATURES/PREDICTORS####
-def convert_var_cont_to_disc(df, new_col, var_name, bins, labels):
+####4)GENERATE-FEATURES/PREDICTORS####
+def convert_var_cont_to_disc(df, new_col, var_name, bins, labels=None):
 	'''
 	Convert one variable at a time from continuous to discreet. 
 	We are binning/bucketing continuous data into discreet chunks 
-	to use as ordinal categorical variables
-	use pd.cut
+	to use as ordinal categorical variables using pd.cut
 
-	Returns: none, creates a new column 
+	Inputs: df, new col name, current col name, bin number, labels
+	
+	Returns: none, creates a new column in the df
 	'''
 	df[new_col] = pd.cut(df[var_name], bins=bins, labels=labels)
 
 
 def convert_var_cat_to_bin(df, new_col, var_name, var0, var1):
 	'''
-	Convert one variable at a time form categorical to binary 
+	Convert one variable at a time from categorical to binary
+
+	Inputs: df, new col name, current col name, variable 0 name, variable 1 name
+
 	Returns: none, creates a new column in the df
 	'''
 	df[new_col] = df[var_name].map({var0:0, var1:1})
 
 
-def split_data(df, pred_vars, dep_var, test_size=0.25, random_state=1):
+def split_data(df, pred_vars, dep_var):
 	'''
 	Choose predictors and dependent variables, create train/test data splits
+
+	Inputs: df, list of predicted variables, independent variable
+
+	Returns: X_train, X_test, y_train, y_test
 	'''
 	X = df[pred_vars]
 	y = df[dep_var]
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size, random_state)
+	X_train, X_test, y_train, y_test = train_test_split(X, y)
 	return X_train, X_test, y_train, y_test
  
 
-####BUILD-CLASSIFIER####
-def build_classifier(X_train, X_test, y_train, y_test):
+####5)BUILD-CLASSIFIER####
+def build_tree_classifier(X_train, X_test, y_train, y_test, criterion):
 	'''
-	Build classifier, return predictions and actual results
+	Build classifier, return results, predictions, and tree
+
+	Inputs: X_train, X_test, y_train, y_test, criterion
+
+	Returns: y_test, y_pred, tree
 	'''
-	treereg = DecisionTreeRegressor(random_state=1)
-	treereg.fit(X_train, y_train)
-	preds = treereg.predict(X_test)
-	return y_test, preds
+	tree = DecisionTreeClassifier(criterion)
+	tree.fit(X_train, y_train)
+	y_pred = tree.predict(X_test)
+	return y_test, y_pred, tree
 
 
-def calc_rmse(y_test, preds):
+####6)EVALUATE-CLASSIFIER####
+def calc_accuracy(y_test, y_pred):
 	'''
-	Calculate Root Mean Squared Error
+	Returns the accuracy score based on the given test data 
+
+	Inputs: y_test, y_pred
+
+	Returns: accuracy score * 100
 	'''
-	return np.sqrt(metrics.mean_squared_error(y_test, preds))
+	return accuracy_score(y_test, y_pred)*100
 
 
-def evaluate_classifier():
+def calc_confusion_matrix(y_test, y_pred, columns=None, index=None):
 	'''
+	Calculate the confusion matrix for the model
+
+	Inputs: y_test, y_pred, columns=None, index=None
+
+	Returns: df confusion matrix
 	'''
-	pass
+	return pd.DataFrame(confusion_matrix(y_test, y_pred), columns, index)
 
 
-#################################################################
-#MAP #minimum functions to include:
-#1) Read/Load Data - DONE
+def calc_feature_importance(pred_vars, tree):
+	'''
+	Calculate feature important of the predictor variables
 
-#2) Explore Data - DO THIS LAST -
-	#distributions of variables
-	#correlations of variables
-	#find outliers
-	#data summaries
+	Input: pred_vars, tree
 
-#3) Pre-Process and Clean Data - DONE
-	#fill in missing values, use mean to fill in
-
-#4) Generate Features/Predictors 
-	#write function for continuous --> discreet variable - DONE
-	#write function for categorical --> binary variable - DONE
-	#apply each function to at least one variable each in the current data set
-
-#5) Build Machine Learning Classifier
-	#select classifier - decision trees
-
-#6) Evaluate Classifier
-	#use any metric
-	#also use accuracy
-	#can evaluate on same data (but bad form)
+	Returns: dataframe with predictor variables and score of importance
+	'''
+	return pd.DataFrame({'feature':pred_vars, 'importance':tree.feature_importances_})
 
 
+def calc_cross_val_score(tree, X, y):
+	'''
+	Calculate cross validation score for the model
+
+	Inputs: tree, X, y
+
+	Returns: cross validation score
+	'''
+	return cross_val_score(tree, X, y)
 
 
+def visualize_tree(tree):
+	'''
+	Visualize the decision tree
 
+	Inputs: tree
 
-###################################################
-
-#OUTSTANDING TO-DOS:
-#2) Explore Data - DO THIS LAST -
-	#distributions of variables
-	#correlations of variables
-	#find outliers
-	#data summaries
-
-#4) Generate Features/Predictors 
-	#apply each function to at least one variable each in the current data set
-
-#5) Build Machine Learning Classifier
-	#select classifier - decision trees
-
-#6) Evaluate Classifier
-	#use any metric
-	#also use accuracy
-	#can evaluate on same data (but bad form)
-
-
-
-
+	Returns: image of tree 
+	'''
+	dot_data = StringIO()
+	export_graphviz(tree, out_file=dot_data, filled=True, rounded=True, special_characters=True)
+	graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
+	return Image(graph.create_png())
 
 
 
