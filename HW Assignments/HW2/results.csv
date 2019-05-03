@@ -1,0 +1,44 @@
+model_type,clf,parameters,auc-roc,p_at_5,p_at_10,p_at_20
+RF,"RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+            max_depth=1, max_features='sqrt', max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=10,
+            min_weight_fraction_leaf=0.0, n_estimators=1, n_jobs=-1,
+            oob_score=False, random_state=None, verbose=0,
+            warm_start=False)","{'max_depth': 1, 'max_features': 'sqrt', 'min_samples_split': 10, 'n_estimators': 1}",0.6628549131598261,0.44140625,0.5560975609756098,0.2780487804878049
+DT,"DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=1,
+            max_features=None, max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=10,
+            min_weight_fraction_leaf=0.0, presort=False, random_state=None,
+            splitter='best')","{'criterion': 'gini', 'max_depth': 1, 'min_samples_split': 10}",0.6628549131598261,0.44140625,0.5560975609756098,0.2780487804878049
+KNN,"KNeighborsClassifier(algorithm='auto', leaf_size=30, metric='minkowski',
+           metric_params=None, n_jobs=1, n_neighbors=5, p=2,
+           weights='uniform')","{'algorithm': 'auto', 'n_neighbors': 5, 'weights': 'uniform'}",0.7308065730314841,0.533203125,0.4848780487804878,0.3726829268292683
+ET,"ExtraTreesClassifier(bootstrap=False, class_weight=None, criterion='gini',
+           max_depth=1, max_features='sqrt', max_leaf_nodes=None,
+           min_impurity_decrease=0.0, min_impurity_split=None,
+           min_samples_leaf=1, min_samples_split=10,
+           min_weight_fraction_leaf=0.0, n_estimators=1, n_jobs=-1,
+           oob_score=False, random_state=None, verbose=0, warm_start=False)","{'criterion': 'gini', 'max_depth': 1, 'max_features': 'sqrt', 'min_samples_split': 10, 'n_estimators': 1}",0.5078927290442043,0.05078125,0.025365853658536587,0.012682926829268294
+AB,"AdaBoostClassifier(algorithm='SAMME',
+          base_estimator=DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=1,
+            max_features=None, max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, presort=False, random_state=None,
+            splitter='best'),
+          learning_rate=1.0, n_estimators=1, random_state=None)","{'algorithm': 'SAMME', 'n_estimators': 1}",0.6628549131598261,0.44140625,0.5560975609756098,0.2780487804878049
+GB,"GradientBoostingClassifier(criterion='friedman_mse', init=None,
+              learning_rate=0.1, loss='deviance', max_depth=1,
+              max_features=None, max_leaf_nodes=None,
+              min_impurity_decrease=0.0, min_impurity_split=None,
+              min_samples_leaf=1, min_samples_split=2,
+              min_weight_fraction_leaf=0.0, n_estimators=1, presort='auto',
+              random_state=None, subsample=0.5, verbose=0,
+              warm_start=False)","{'learning_rate': 0.1, 'max_depth': 1, 'n_estimators': 1, 'subsample': 0.5}",0.6628549131598261,0.44140625,0.5560975609756098,0.2780487804878049
+LR,"LogisticRegression(C=0.01, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, max_iter=100, multi_class='ovr', n_jobs=1,
+          penalty='l1', random_state=None, solver='liblinear', tol=0.0001,
+          verbose=0, warm_start=False)","{'C': 0.01, 'penalty': 'l1'}",0.7205157573145148,0.62109375,0.4429268292682927,0.3326829268292683
+NB,GaussianNB(priors=None),{},0.6973388163067133,0.6171875,0.4165853658536585,0.30634146341463414
