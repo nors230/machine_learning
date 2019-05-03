@@ -5,7 +5,6 @@ Code for Machine Learning Pipeline Version 2
 
 Nora Hajjar
 '''
-
 import pandas as pd
 import numpy as np
 from sklearn import svm
@@ -198,9 +197,9 @@ def visualize_tree(tree):
 ##LOGISTIC REGRESSION##
 def logistic_regression(X_train, X_test, y_train, y_test):
 	'''
-	Build classifier, return results, predictions, and tree
+	Build logistic regression
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: X_train, X_test, y_train, y_test
 
 	Returns: y_test, y_pred, pred_scores
 	'''
@@ -214,11 +213,11 @@ def logistic_regression(X_train, X_test, y_train, y_test):
 ##SVM##
 def svm(X_train, X_test, y_train, y_test):
 	'''
-	Build classifier, return results, predictions, and tree
+	Build svm
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: X_train, X_test, y_train, y_test
 
-	Returns: y_test, y_pred, pred_scores
+	Returns: y_test, y_pred, confidence_score
 	'''
 	svm = LinearSVC()
 	svm.fit(X_train, y_train)
@@ -226,16 +225,15 @@ def svm(X_train, X_test, y_train, y_test):
 	confidence_score = svm.decision_function(X_test)
 	return y_test, y_pred, confidence_score
 
-#predict_proba only, not predict - general recommendation
 
 ##K-NEAREST NEIGHBOR##
 def knn(X_train, X_test, y_train, y_test, n_neighbors=5, 
 	weights='uniform', algorithm='auto', leaf_size=30, p=2, 
 	metric='minkowski', metric_params=None):
 	'''
-	Build classifier, return results, predictions, and tree
+	Build knn
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: X_train, X_test, y_train, y_test
 
 	Returns: y_test, y_pred, pred_scores
 	'''
@@ -250,9 +248,9 @@ def knn(X_train, X_test, y_train, y_test, n_neighbors=5,
 ##RANDOM FOREST##
 def random_forest(X_train, X_test, y_train, y_test):
 	'''
-	Build classifier, return results, predictions, and tree
+	Build random forest
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: X_train, X_test, y_train, y_test
 
 	Returns: y_test, y_pred, pred_scores
 	'''
@@ -266,9 +264,9 @@ def random_forest(X_train, X_test, y_train, y_test):
 ##BOOSTING##
 def boosting(X_train, X_test, y_train, y_test):
 	'''
-	Build classifier, return results, predictions, and tree
+	Build boosting
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: X_train, X_test, y_train, y_test
 
 	Returns: y_test, y_pred, pred_scores
 	'''
@@ -282,13 +280,13 @@ def boosting(X_train, X_test, y_train, y_test):
 ##BAGGING##
 def bagging(X_train, X_test, y_train, y_test):
 	'''
-	Build classifier, return results, predictions, and tree
+	Build bagging
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: X_train, X_test, y_train, y_test
 
 	Returns: y_test, y_pred, pred_scores
 	'''
-	bagging = BaggingClassifier() # use the default parameters: base_estimator is a decision tree, n_estimators=10
+	bagging = BaggingClassifier()
 	bagging.fit(X_train, y_train)
 	y_pred = bagging.predict(X_test)
 	pred_scores = bagging.predict_proba(X_test)
@@ -320,50 +318,55 @@ def calc_confusion_matrix(y_test, y_pred, columns=None, index=None):
 
 def calc_precision(y_test, y_pred):
 	'''
-	Calculate the confusion matrix for the model
+	Calculate precision
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: y_test, y_pred
 
-	Returns: df confusion matrix
+	Returns: precision score
 	'''
 	return precision_score(y_test, y_pred)
 
 
 def calc_recall(y_test, y_pred):
 	'''
-	Calculate the confusion matrix for the model
+	Calculate recall
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: y_test, y_pred
 
-	Returns: df confusion matrix
+	Returns: recall score
 	'''
 	return recall_score(y_test, y_pred)
 
 
 def calc_f1(y_test, y_pred):
 	'''
-	Calculate the confusion matrix for the model
+	Calculate f1
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: y_test, y_pred
 
-	Returns: df confusion matrix
+	Returns: f1 score
 	'''
 	return f1_score(y_test, y_pred)
 
 
 def calc_auc_roc(y_test, pred_scores):
 	'''
-	Calculate the confusion matrix for the model
+	Calculate auc_roc
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: y_test, pred_scores
 
-	Returns: df confusion matrix
+	Returns: auc_roc score
 	'''
 	return roc_auc_score(y_test, pred_scores)
 
 
 def plot_precision_recall(predicted_scores, true_labels):
 	'''
+	Plot precision-recall curve
+
+	Inputs: predicted_scores, true_labels
+
+	Returns: plots
 	'''
 	precision, recall, thresholds = precision_recall_curve(true_labels, predicted_scores)
 	plt.plot(recall, precision, marker='.')
@@ -373,11 +376,11 @@ def plot_precision_recall(predicted_scores, true_labels):
 #BUILD A CALC TABLE FOR DIFFERENT THRESHOLDS, REUSABLE ACROSS DATA
 def calc_scores_pred(model_name, time_period, y_test, pred_scores, threshold_list):
 	'''
-	Build classifier, return results, predictions, and tree
+	Calc scores
 
-	Inputs: X_train, X_test, y_train, y_test, criterion
+	Inputs: model_name, time_period, y_test, pred_scores, threshold_list
 
-	Returns: y_test, y_pred, pred_scores
+	Returns: dataframe with score results
 	'''
 	COLUMNS = ['model_name', 'time_period',
 		'threshold', 'accuracy', 'precision', 'recall', 'f1', 'auc_roc']
@@ -399,12 +402,15 @@ def calc_scores_pred(model_name, time_period, y_test, pred_scores, threshold_lis
 #run all models (excluding SVM because it uses confidence_score, runs separately)
 def run_models(model_dict, time_dict, threshold_list):
 	'''
+	Run models
+
+	Inputs: model_dict, time_dict, threshold_list
+
+	Returns: dataframe with full results
 	'''
 	final_df = pd.DataFrame()
-
 	for time_period, train_test_list in time_dict.items():
 		(X_train, X_test, y_train, y_test) = train_test_list
-
 		for model_name, model_class in model_dict.items():
 			model = model_class
 			model.fit(X_train, y_train)
@@ -412,7 +418,52 @@ def run_models(model_dict, time_dict, threshold_list):
 			pred_scores = model.predict_proba(X_test)
 			results_df = calc_scores_pred(model_name, time_period, y_test, pred_scores, threshold_list)
 			final_df = pd.concat([final_df, results_df])
+	return final_df.sort_values(by=['model_name', 'time_period'], ascending=[1, 1])
 
+
+def calc_scores_conf(model_name, time_period, y_test, confidence_score, threshold_list):
+	'''
+	Calc scores
+
+	Inputs: model_name, time_period, y_test, pred_scores, threshold_list
+
+	Returns: dataframe with score results
+	'''
+	COLUMNS = ['model_name', 'time_period',
+		'threshold', 'accuracy', 'precision', 'recall', 'f1', 'auc_roc']
+
+	output_df = pd.DataFrame()
+	for threshold in threshold_list:
+		pred_label = [1 if x >threshold else 0 for x in confidence_score]
+		accuracy = accuracy_score(pred_label, y_test)
+		precision = precision_score(y_test, pred_label)
+		recall = recall_score(y_test, pred_label)
+		f1 = f1_score(y_test, pred_label)
+		auc_roc = roc_auc_score(y_test, pred_label)
+		df2 = pd.DataFrame([[model_name, time_period, threshold, accuracy, precision, recall, f1, auc_roc]], 
+			columns=COLUMNS)
+		output_df = pd.concat([output_df, df2])
+	return output_df
+
+
+def run_models_conf(model_dict, time_dict, threshold_list):
+	'''
+	Run models
+
+	Inputs: model_dict, time_dict, threshold_list
+
+	Returns: dataframe with full results
+	'''
+	final_df = pd.DataFrame()
+	for time_period, train_test_list in time_dict.items():
+		(X_train, X_test, y_train, y_test) = train_test_list
+		for model_name, model_class in model_dict.items():
+			model = model_class
+			model.fit(X_train, y_train)
+			y_pred = model.predict(X_test)
+			confidence_score = model.decision_function(X_test)
+			results_df = calc_scores_conf(model_name, time_period, y_test, confidence_score, threshold_list)
+			final_df = pd.concat([final_df, results_df])
 	return final_df.sort_values(by=['model_name', 'time_period'], ascending=[1, 1])
 
 
@@ -420,48 +471,41 @@ def run_models(model_dict, time_dict, threshold_list):
 #Create temporal validation function in your pipeline that can create training and test sets over time. 
 #You can choose the length of these splits based on analyzing the data. For example, the test sets could 
 #be six months long and the training sets could be all the data before each test set.
-
 def temp_val_train(df, date_col, date_val):
 	'''
-	Calculate the confusion matrix for the model
+	Create temp val train df
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: df, date_col, date_val
 
-	Returns: df confusion matrix
+	Returns: temp val train df
 	'''
 	return df[df[date_col] <= date_val]
 
 
 def temp_val_test(df, date_col, date_1, date_2):
 	'''
-	Calculate the confusion matrix for the model
+	Create temp val test df
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: df, date_col, date_1, date_2
 
-	Returns: df confusion matrix
+	Returns: temp val test df
 	'''
 	return df[df[date_col].between(date_1, date_2, inclusive=True)]
 
 
 def extract_train_test(df_train, df_test, dep_var, pred_vars):
-
 	'''
-	Calculate the confusion matrix for the model
+	Create train test splits
 
-	Inputs: y_test, y_pred, columns=None, index=None
+	Inputs: df_train, df_test, dep_var, pred_vars
 
-	Returns: df confusion matrix
+	Returns: train test splits
 	'''
 	X_train = df_train[pred_vars]
 	X_test = df_test[pred_vars]
 	y_train = df_train[dep_var]
 	y_test = df_test[dep_var]
 	return X_train, X_test, y_train, y_test
-
-
-
-
-
 
 
 
