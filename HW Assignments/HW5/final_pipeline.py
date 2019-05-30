@@ -180,37 +180,30 @@ def train_test_split(df, pred_vars, dep_var):
 #You can choose the length of these splits based on analyzing the data. For example, the test sets could 
 #be six months long and the training sets could be all the data before each test set.
 
-#training 1: 1/1/2012 to 4/30/2012 (leave 60 days to see result of training data) you can define training as 1/1/2012 - 6/30/12 but you are only going to eval those that have posting dates 1/1/12-4/30/12 but the extra time is for those posted on like 4/29/12, 
-#test 1: 7/1/2012 to 10/31/2012, you only eval those with posting dates 7/1/2012 to 10/31/2012 (so you have time to get the labels for those posted on 10/31/2012)
+#Guidelines for Analysis:
+#training 1: 1/1/2012 to 4/30/2012 (leave 60 days to see result of training data) 
+#test 1: 7/1/2012 to 10/31/2012
 
-#training 2: 1/1/2012 to 10/31/2012, 
-#test 2: 1/1/2013 to 4/30/2013 with 4/30 - 6/30 for evaluation/getting labels
+#training 2: 1/1/2012 to 10/31/2012
+#test 2: 1/1/2013 to 4/30/2013
 
-#training 3: 1/1/2012 to 4/30/2013, 
-#test 3: 7/1/2013 to 10/31/2013 with 10/31 to 12/31 for evaluation/getting labels
+#training 3: 1/1/2012 to 4/30/2013
+#test 3: 7/1/2013 to 10/31/2013
 
-def temporal_validate(start_time, end_time, prediction_windows, outcome_days):
+def temporal_splits(start_time, end_time, prediction_windows, outcome_days):
 	'''
-	Identifies times at which to split data into training and
-	test sets over time.
+	Split temporal data into windows based on inputs
 
-	Input:
-	start_time: start time of data
-	end_time: last date of data, including labels and outcomes that we have
-	prediction_windows: a list of how far out we want to predict, in months
-	outcome_days: number of days needed to evaluate the outcome
+	Inputs: start_time, end_time. prediction_windows, outcome days
 
-	Returns:
-	a list of training set start and end time, and testing set start and end time,
-	for each temporally validated dataset
+	Returns: splits - a list of start and end times
 
-	Adapted with permission from Rayid Ghani: https://github.com/rayidghani/magicloops
+	code updated with permission: https://github.com/rayidghani/magicloops/blob/master/simpleloop.py, credit to Rayid Ghani
 	'''
 	splits = []
 	start_time_date = datetime.strptime(start_time, '%Y-%m-%d')
 	end_time_date = datetime.strptime(end_time, '%Y-%m-%d')
 	actual_end_time_date = end_time_date - relativedelta(days=+(outcome_days+1))
-
 	for prediction_window in prediction_windows:
 		on_window = 1
 		test_end_time = start_time_date
@@ -221,31 +214,39 @@ def temporal_validate(start_time, end_time, prediction_windows, outcome_days):
 			test_end_time = test_start_time + relativedelta(months=+prediction_window) - relativedelta(days=+(outcome_days+2))
 			splits.append([train_start_time, train_end_time, test_start_time, test_end_time])
 			on_window += 1
-
 	return splits
 
 
 def temporal_split_train_test_dfs(df, splits):
 	'''
-	Create train test splits for one group of train/test data (no X or y yet)
+	Create train test splits on data, based on temporal splits
 
-	Inputs: df, dep_var, pred_vars
+	Inputs: df, splits
 
-	Returns: train test data in a list of dataframes
+	Returns: train test data in a list of dataframes, based on splits
 	'''
 	df_train_test_list = []
-
 	for split in splits:
 		train_start, train_end, test_start, test_end = split
 		train_df = df[(df['date_posted'] >= train_start) & (df['date_posted'] <= train_end)].copy()
 		test_df = df[(df['date_posted'] >= test_start) & (df['date_posted'] <= test_end)].copy()
 		df_train_test_list.extend([train_df, test_df])
-
 	return df_train_test_list
 
 
 def clean_data(df_list, cat_cols=None, disc_cols=None):
 	'''
+	Clean and process data after train/test split. 
+	Cleaning includes filling nulls, converting true/false to binaries, 
+	converting columns to categorical, and continuous to discrete
+
+	Inputs: 
+	- df_list - list of test/control dataframes
+	- cat_cols - list of columns to convert to categorical
+	- disc_cols - list of columns to convert to discrete
+
+	Returns: None, updates df in place for all cleaning
+
 	'''
 	for df in df_list:
 		fill_null_auto(df)
@@ -257,11 +258,10 @@ def clean_data(df_list, cat_cols=None, disc_cols=None):
 ####RUN PIPELINE####
 ###############################################
 '''
-The following code used with permission:
+Pipeline code updated with permission:
 https://github.com/rayidghani/magicloops/blob/master/simpleloop.py, credit to Rayid Ghani
 '''
 def define_clfs_params():
-	
 	clfs = {
 		'BG': BaggingClassifier(n_estimators=10),
 		'RF': RandomForestClassifier(n_estimators=50, n_jobs=-1),
@@ -287,9 +287,7 @@ def define_clfs_params():
 
 
 def models_to_run():
-
 	models_to_run = ['RF', 'AB', 'DT', 'GB', 'SVM', 'KNN', 'LR', 'BG']
-
 	return models_to_run
 	
 
@@ -414,211 +412,7 @@ def clf_loop_all_data(models_to_run, clfs, grid, train_test_dfs, pred_vars, dep_
 	
 	return results_df
 
-
-
-
-
-
-
-
-
-
-
-	
-
-# def clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test):
-# 	"""Runs the loop using models_to_run, clfs, gridm and the data
-# 	"""
-# 	results_df = pd.DataFrame(columns=('model_type', 'clf', 'parameters','auc-roc','p_at_1', 'p_at_2', 'p_at_5',
-# 										'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 'f1_at_1',
-# 										'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
-	
-# 	for index,clf in enumerate([clfs[x] for x in models_to_run]):
-# 		print(models_to_run[index])
-# 		parameter_values = grid[models_to_run[index]]
-# 		for p in ParameterGrid(parameter_values):
-# 			clf.set_params(**p)
-# 			if 'SVM'in models_to_run[index]:
-# 				y_pred_probs = clf.fit(X_train, y_train).decision_function(X_test)
-# 			else:
-# 				y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:,1]
-# 			y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
-# 			results_df.loc[len(results_df)] = [models_to_run[index], clf, p,
-# 											  roc_auc_score(y_test, y_pred_probs),
-
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
-# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
-
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
-# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
-
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
-# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
-			
-# 			plot_precision_recall_n(y_test,y_pred_probs,clf)
-
-# 	return results_df
-
-
-# def run_all(train_test_dfs, pred_vars, dep_var, models_to_run, clfs, grid):
-# 	'''
-# 	'''
-# 	results_dfs = []
-# 	for i, df in enumerate(train_test_dfs):
-# 		if i % 2 == 0:
-# 			train_df = train_test_dfs[i]
-# 			test_df = train_test_dfs[i + 1]
-# 			X_train = train_df[pred_vars]
-# 			y_train = train_df[dep_var]
-# 			X_test = test_df[pred_vars]
-# 			y_test = test_df[dep_var]
-# 			period = "train_test_data_period" + "_" + str(i + 1)
-# 			print(period)
-# 			result = clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test)
-# 			results_dfs.append((result, period))
-
-# 	return results_dfs
-
-
-
-
-
-
-
-
-
-##########TEST##############
-
-
-
 ####END####
 ###############################################
-
-
-#Review below and delete before submit#
-
-
-def calc_confusion_matrix(y_test, y_pred, columns=None, index=None):
-	'''
-	Calculate the confusion matrix for the model
-
-	Inputs: y_test, y_pred, columns=None, index=None
-
-	Returns: df confusion matrix
-	'''
-	return pd.DataFrame(confusion_matrix(y_test, y_pred), columns, index)
-
-
-
-#BUILD A CALC TABLE FOR DIFFERENT THRESHOLDS, REUSABLE ACROSS DATA
-def calc_scores_pred(model_name, time_period, y_test, pred_scores, threshold_list):
-	'''
-	Calc scores
-
-	Inputs: model_name, time_period, y_test, pred_scores, threshold_list
-
-	Returns: dataframe with score results
-	'''
-	COLUMNS = ['model_name', 'time_period',
-		'threshold', 'accuracy', 'precision', 'recall', 'f1', 'auc_roc']
-
-	output_df = pd.DataFrame()
-	for threshold in threshold_list:
-		pred_label = [1 if x[1]>threshold else 0 for x in pred_scores]
-		accuracy = accuracy_score(pred_label, y_test)
-		precision = precision_score(y_test, pred_label)
-		recall = recall_score(y_test, pred_label)
-		f1 = f1_score(y_test, pred_label)
-		auc_roc = roc_auc_score(y_test, pred_label)
-		df2 = pd.DataFrame([[model_name, time_period, threshold, accuracy, precision, recall, f1, auc_roc]], 
-			columns=COLUMNS)
-		output_df = pd.concat([output_df, df2])
-	return output_df
-
-
-#run all models (excluding SVM because it uses confidence_score, runs separately)
-def run_models(model_dict, time_dict, threshold_list):
-	'''
-	Run models
-
-	Inputs: model_dict, time_dict, threshold_list
-
-	Returns: dataframe with full results
-	'''
-	final_df = pd.DataFrame()
-	for time_period, train_test_list in time_dict.items():
-		(X_train, X_test, y_train, y_test) = train_test_list
-		for model_name, model_class in model_dict.items():
-			model = model_class
-			model.fit(X_train, y_train)
-			y_pred = model.predict(X_test)
-			pred_scores = model.predict_proba(X_test)
-			results_df = calc_scores_pred(model_name, time_period, y_test, pred_scores, threshold_list)
-			final_df = pd.concat([final_df, results_df])
-	return final_df.sort_values(by=['model_name', 'time_period'], ascending=[1, 1])
-
-
-def calc_scores_conf(model_name, time_period, y_test, confidence_score, threshold_list):
-	'''
-	Calc scores
-
-	Inputs: model_name, time_period, y_test, pred_scores, threshold_list
-
-	Returns: dataframe with score results
-	'''
-	COLUMNS = ['model_name', 'time_period',
-		'threshold', 'accuracy', 'precision', 'recall', 'f1', 'auc_roc']
-
-	output_df = pd.DataFrame()
-	for threshold in threshold_list:
-		pred_label = [1 if x >threshold else 0 for x in confidence_score]
-		accuracy = accuracy_score(pred_label, y_test)
-		precision = precision_score(y_test, pred_label)
-		recall = recall_score(y_test, pred_label)
-		f1 = f1_score(y_test, pred_label)
-		auc_roc = roc_auc_score(y_test, pred_label)
-		df2 = pd.DataFrame([[model_name, time_period, threshold, accuracy, precision, recall, f1, auc_roc]], 
-			columns=COLUMNS)
-		output_df = pd.concat([output_df, df2])
-	return output_df
-
-
-def run_models_conf(model_dict, time_dict, threshold_list):
-	'''
-	Run models
-
-	Inputs: model_dict, time_dict, threshold_list
-
-	Returns: dataframe with full results
-	'''
-	final_df = pd.DataFrame()
-	for time_period, train_test_list in time_dict.items():
-		(X_train, X_test, y_train, y_test) = train_test_list
-		for model_name, model_class in model_dict.items():
-			model = model_class
-			model.fit(X_train, y_train)
-			y_pred = model.predict(X_test)
-			confidence_score = model.decision_function(X_test)
-			results_df = calc_scores_conf(model_name, time_period, y_test, confidence_score, threshold_list)
-			final_df = pd.concat([final_df, results_df])
-	return final_df.sort_values(by=['model_name', 'time_period'], ascending=[1, 1])
-
-
-
 
 
