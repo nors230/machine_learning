@@ -1,7 +1,7 @@
 '''
-CAPP30254-ML: HW 3 - Machine Learning Pipeline
+CAPP30254-ML: HW 5 - Machine Learning Pipeline
 
-Code for Machine Learning Pipeline Version 2
+Code for Machine Learning Pipeline Version 4 (Revision of HW3)
 
 Nora Hajjar
 '''
@@ -28,8 +28,6 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
 from sklearn.externals.six import StringIO  
 from IPython.display import Image  
 from sklearn.tree import export_graphviz
@@ -38,6 +36,8 @@ from sklearn.model_selection import cross_val_score
 import time
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from pandas.api.types import is_string_dtype
+from pandas.api.types import is_numeric_dtype
 
 
 ####1)READ/LOAD_DATA####
@@ -87,7 +87,7 @@ def get_outliers(df):
 	return df.boxplot()
 
 
-####3)PRE-PROCESS/CLEAN_DATA####  DONE
+####3)PRE-PROCESS/CLEAN_DATA####
 def check_null_counts(df):
 	'''
 	Get null counts in dataframe
@@ -100,43 +100,16 @@ def check_null_counts(df):
 	return null_counts
 
 
-def get_null_cols(df, null_counts):
-	'''
-	Get null columns in dataframe
-
-	Inputs: df
-
-	Returns: list of null columns
-	'''
-	null_cols = []
-	for index, val in null_counts.iteritems():
-		if val > 0:
-			null_cols.append(index)
-	return null_cols
-
-
-def fill_null_cols(df, null_cols):
-	'''
-	Fill null columns in the dataframe with the mean of the column
-
-	Inputs: df, list of null columns
-
-	Returns: none, updates the dataframe in place 
-	'''
-	for col in null_cols:
-		df[col].fillna(df[col].mean(), inplace=True)
-
-
 def fill_null_auto(df):
 	'''
 	Input: df
 
 	Returns: None, updates df in place
 	'''
-	columns = df.columns.tolist()
-	for column in columns:
-		if df[column].isnull().any():
-			df[column].fillna(df[column].mean(), inplace=True)
+	cols = df.columns.tolist()
+	for col in cols:
+		if df[col].isnull().any():
+			df[col].fillna(df[col].mean(), inplace=True)
 
 
 ####4)GENERATE-FEATURES/PREDICTORS####
@@ -151,29 +124,6 @@ def convert_column_type(df, col, new_type):
 	df[col] = df[col].astype(new_type)
 
 
-def convert_to_disc(df, cols, bins, labels):
-	'''
-	Discretize continuous variables into discrete variables
-
-	Inputs: df, cols, bins, labels
-
-	Returns: None, updates the columns in df
-	'''
-	for col in cols:
-		df[col] = pd.cut(df[col], bins=bins, labels=labels, include_lowest=True)
-
-
-def convert_to_dummy(df, cols=None):
-	'''
-	Convert variables to dummy variables
-
-	Inputs: df, col
-
-	Returns: None, updates df
-	'''
-	df = pd.get_dummies(df, columns=cols)
-
-
 def convert_to_datetime(df, cols):
 	'''
 	'''
@@ -181,20 +131,48 @@ def convert_to_datetime(df, cols):
 		df[col] =  pd.to_datetime(df[col])
 
 
-def convert_column_type(df, col, new_type):
+def convert_tf_to_binary(df):
 	'''
-	Convert a column to a new type 
-
-	Inputs: df, column, new_type
-
-	Returns: None, updates the column in df
 	'''
-	df[col] = df[col].astype(new_type)
+	cols = df.columns.tolist()
+	for col in cols:
+		if is_string_dtype(df[col]):
+			if (df[col] == 't').any():
+				df[col] = df[col].map({'f': 0, 't': 1})
 
 
-	#don't forget to do this
-	#fill null cols
-	#p.fill_null_cols(df, ['students_reached'])
+def convert_to_categorical(df, cat_cols):
+	'''
+	'''
+	for col in cat_cols:
+		df[col] = df[col].astype('category').cat.codes
+
+
+def convert_to_disc(df, disc_cols, bins=4, labels=[0,1,2,3]):
+	'''
+	Discretize continuous variables into discrete variables
+
+	Inputs: df, cols, bins, labels
+
+	Returns: None, updates the columns in df
+	'''
+	for col in disc_cols:
+		df[col] = pd.cut(df[col], bins=bins, labels=labels, include_lowest=True)
+
+
+####4)TRAIN/TEST DATA####
+def train_test_split(df, pred_vars, dep_var):
+	'''
+	Choose predictors and dependent variables, create train/test data splits
+
+	Inputs: df, list of predicted variables, independent variable
+
+	Returns: X_train, X_test, y_train, y_test
+	'''
+	X = df[pred_vars]
+	y = df[dep_var]
+	X_train, X_test, y_train, y_test = train_test_split(X, y)
+	return X_train, X_test, y_train, y_test
 
 
 ####TEMPORAL_VALIDATION_FUNCTIONS####
@@ -210,7 +188,6 @@ def convert_column_type(df, col, new_type):
 
 #training 3: 1/1/2012 to 4/30/2013, 
 #test 3: 7/1/2013 to 10/31/2013 with 10/31 to 12/31 for evaluation/getting labels
-
 
 def temporal_validate(start_time, end_time, prediction_windows, outcome_days):
     '''
@@ -244,10 +221,11 @@ def temporal_validate(start_time, end_time, prediction_windows, outcome_days):
             test_end_time = test_start_time + relativedelta(months=+prediction_window) - relativedelta(days=+(outcome_days+2))
             splits.append([train_start_time, train_end_time, test_start_time, test_end_time])
             on_window += 1
+
     return splits
 
 
-def temporal_split_train_test_dfs(df, dep_var, pred_vars, splits):
+def temporal_split_train_test_dfs(df, splits):
 	'''
 	Create train test splits for one group of train/test data (no X or y yet)
 
@@ -266,94 +244,17 @@ def temporal_split_train_test_dfs(df, dep_var, pred_vars, splits):
 	return df_train_test_list
 
 
-
-
-def clean_data(df_list):
+def clean_data(df_list, cat_cols=None, disc_cols=None):
 	'''
 	'''
 	for df in df_list:
-		#fill null cols in place
 		fill_null_auto(df)
+		convert_tf_to_binary(df)
+		convert_to_categorical(df, cat_cols)
+		convert_to_disc(df, disc_cols)
 
 
-def temporal_split(full_data, train_start, train_end, test_start, test_end, datetime_var, y_var):
-	'''
-	Splits data into temporally validated training set and test sets.
-	Input:
-	full_data: full dataframe
-	train_start: start datetime for training set
-	train_end: end datetime for training set
-	test_start: start datetime for test set
-	test_end: end datetime for test set
-	datetime_var: the name of the temporal variable being split on
-	y_var: the name of the dependent/output variable
-	
-	Returns:
-	Training and testing sets for the independent and dependent variables.
-	'''
-	train_data = full_data[(full_data[datetime_var] >= train_start) & (full_data[datetime_var] <= train_end)]
-	y_train = train_data[y_var]
-	X_train = train_data.drop([y_var, datetime_var], axis = 1)
-
-	test_data = full_data[(full_data[datetime_var] >= test_start) & (full_data[datetime_var] <= test_end)]
-	y_test = test_data[y_var]
-	X_test = test_data.drop([y_var, datetime_var], axis = 1)
-	return X_train, X_test, y_train, y_test
-
-
-
-
-
-
-
-
-
-
-
-def temporal_train_test(df, splits, datetime_var, y_var):
-	'''
-	'''
-	for split in splits:
-		X_train, X_test, y_train, y_test = temporal_split(df, split[0], split[1], split[2], split[3], datetime_var, y_var)
-
-
-
-
-
-
-
-
-# def temp_val_train(df, date_col, date_val):
-# 	'''
-# 	Create temp val train df
-
-# 	Inputs: df, date_col, date_val
-
-# 	Returns: temp val train df
-# 	'''
-# 	return df[df[date_col] <= date_val]
-
-
-# def temp_val_test(df, date_col, date_1, date_2):
-# 	'''
-# 	Create temp val test df
-
-# 	Inputs: df, date_col, date_1, date_2
-
-# 	Returns: temp val test df
-# 	'''
-# 	return df[df[date_col].between(date_1, date_2, inclusive=True)]
-
-
-
-
-
-
-
-
-
-
-
+####RUN PIPELINE####
 ###############################################
 '''
 The following code used with permission:
@@ -448,19 +349,18 @@ def plot_precision_recall_n(y_true, y_prob, model_name):
     ax1.set_ylim([0,1])
     ax1.set_ylim([0,1])
     ax2.set_xlim([0,1])
-    
+   
     name = model_name
     plt.title(name)
-    #plt.savefig(name)
     plt.show()
     
 
 def clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test):
     """Runs the loop using models_to_run, clfs, gridm and the data
     """
-    results_df = pd.DataFrame(columns=('model_type', 'clf', 'parameters','auc-roc','p_at_5',
-                                        'p_at_10', 'p_at_20', 'r_at_5', 'r_at_10', 'r_at_20', 'f1_at_5',
-                                        'f1_at_10', 'f1_at_20'))
+    results_df = pd.DataFrame(columns=('model_type', 'clf', 'parameters','auc-roc','p_at_1', 'p_at_2', 'p_at_5',
+                                        'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 'f1_at_1',
+                                        'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
     for index,clf in enumerate([clfs[x] for x in models_to_run]):
         print(models_to_run[index])
         parameter_values = grid[models_to_run[index]]
@@ -473,188 +373,127 @@ def clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test):
             y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
             results_df.loc[len(results_df)] = [models_to_run[index], clf, p,
                                               roc_auc_score(y_test, y_pred_probs),
+
+                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
+                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
                                               precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
                                               precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
                                               precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
+                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
+                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
+
+                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
                                               recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
                                               recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
                                               recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
+
+                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
                                               f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
                                               f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0)]
+                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
+            
             plot_precision_recall_n(y_test,y_pred_probs,clf)
+
     return results_df
 
 
-######################################
-#old code
-
-
-def convert_var_cat_to_bin(df, new_col, var_name, var0, var1):
+def run_all(train_test_dfs, pred_vars, dep_var, models_to_run, clfs, grid):
 	'''
-	Convert one variable at a time from categorical to binary
-
-	Inputs: df, new col name, current col name, variable 0 name, variable 1 name
-
-	Returns: none, creates a new column in the df
 	'''
-	df[new_col] = df[var_name].map({var0:0, var1:1})
+	results_dfs = []
+	for i, df in enumerate(train_test_dfs):
+		if i % 2 == 0:
+			train_df = train_test_dfs[i]
+			test_df = train_test_dfs[i + 1]
+			X_train = train_df[pred_vars]
+			y_train = train_df[dep_var]
+			X_test = test_df[pred_vars]
+			y_test = test_df[dep_var]
+			period = "train_test_data_period" + "_" + str(i + 1)
+			print(period)
+			result = clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test)
+			results_dfs.append((result, period))
+
+	return results_dfs
 
 
-def split_data(df, pred_vars, dep_var):
-	'''
-	Choose predictors and dependent variables, create train/test data splits
-
-	Inputs: df, list of predicted variables, independent variable
-
-	Returns: X_train, X_test, y_train, y_test
-	'''
-	X = df[pred_vars]
-	y = df[dep_var]
-	X_train, X_test, y_train, y_test = train_test_split(X, y)
-	return X_train, X_test, y_train, y_test
- 
-
-####5)BUILD-CLASSIFIER####
-
-##DECISION TREE##
-def build_tree_classifier(X_train, X_test, y_train, y_test, criterion='gini'):
-	'''
-	Build classifier, return results, predictions, and tree
-
-	Inputs: X_train, X_test, y_train, y_test, criterion
-
-	Returns: y_test, y_pred, tree
-	'''
-	tree = DecisionTreeClassifier(criterion)
-	tree.fit(X_train, y_train)
-	y_pred = tree.predict(X_test)
-	return y_test, y_pred, tree
 
 
-def visualize_tree(tree):
-	'''
-	Visualize the decision tree
-
-	Inputs: tree
-
-	Returns: image of tree 
-	'''
-	dot_data = StringIO()
-	export_graphviz(tree, out_file=dot_data, filled=True, rounded=True, special_characters=True)
-	graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
-	return Image(graph.create_png())
 
 
-##LOGISTIC REGRESSION##
-def logistic_regression(X_train, X_test, y_train, y_test):
-	'''
-	Build logistic regression
+def clf_loop_2(models_to_run, clfs, grid, train_test_dfs):
+    """Runs the loop using models_to_run, clfs, gridm and the data
+    """
+    results_df = pd.DataFrame(columns=('time_period', 'model_type', 'clf', 'parameters','auc-roc','p_at_1', 'p_at_2', 'p_at_5',
+                                        'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 'f1_at_1',
+                                        'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
+    
+    for i, df in enumerate(train_test_dfs):
+    	if i % 2 == 0:
+    		train_df = train_test_dfs[i]
+    		test_df = train_test_dfs[i + 1]
+    		X_train = train_df[pred_vars]
+    		y_train = train_df[dep_var]
+    		X_test = test_df[pred_vars]
+    		y_test = test_df[dep_var]
+    		period = "train_test_data_period" + "_" + str(i + 1)
 
-	Inputs: X_train, X_test, y_train, y_test
+    		for index,clf in enumerate([clfs[x] for x in models_to_run]):
+		    	print(models_to_run[index])
+		    	parameter_values = grid[models_to_run[index]]
+		    	for p in ParameterGrid(parameter_values):
+		        	clf.set_params(**p)
+		        	if 'SVM'in models_to_run[index]:
+		            	y_pred_probs = clf.fit(X_train, y_train).decision_function(X_test)
+		        	else:
+		                y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:,1]
+		            y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
+		            results_df.loc[len(results_df)] = [period, models_to_run[index], clf, p,
+		                                              roc_auc_score(y_test, y_pred_probs),
 
-	Returns: y_test, y_pred, pred_scores
-	'''
-	lr = LogisticRegression()
-	lr.fit(X_train, y_train)
-	y_pred = lr.predict(X_test)
-	pred_scores = lr.predict_proba(X_test)
-	return y_test, y_pred, pred_scores
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
+		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
 
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
 
-##SVM##
-def svm(X_train, X_test, y_train, y_test):
-	'''
-	Build svm
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
+		            
+		            plot_precision_recall_n(y_test,y_pred_probs,clf)
 
-	Inputs: X_train, X_test, y_train, y_test
+    return results_df
 
-	Returns: y_test, y_pred, confidence_score
-	'''
-	svm = LinearSVC()
-	svm.fit(X_train, y_train)
-	y_pred = svm.predict(X_test)
-	confidence_score = svm.decision_function(X_test)
-	return y_test, y_pred, confidence_score
-
-
-##K-NEAREST NEIGHBOR##
-def knn(X_train, X_test, y_train, y_test, n_neighbors=5, 
-	weights='uniform', algorithm='auto', leaf_size=30, p=2, 
-	metric='minkowski', metric_params=None):
-	'''
-	Build knn
-
-	Inputs: X_train, X_test, y_train, y_test
-
-	Returns: y_test, y_pred, pred_scores
-	'''
-	knn = KNeighborsClassifier(n_neighbors, weights, algorithm, leaf_size, p, metric, metric_params)
-	knn.fit(X_train, y_train)
-	y_pred = knn.predict(X_test)
-	pred_scores = knn.predict_proba(X_test)
-	return y_test, y_pred, pred_scores
-
-
-#####ENSEMBLE METHODS#####
-##RANDOM FOREST##
-def random_forest(X_train, X_test, y_train, y_test):
-	'''
-	Build random forest
-
-	Inputs: X_train, X_test, y_train, y_test
-
-	Returns: y_test, y_pred, pred_scores
-	'''
-	rand = RandomForestClassifier()
-	rand.fit(X_train, y_train)
-	y_pred = rand.predict(X_test)
-	pred_scores = rand.predict_proba(X_test)
-	return y_test, y_pred, pred_scores
+####END####
+###############################################
 
 
-##BOOSTING##
-def boosting(X_train, X_test, y_train, y_test):
-	'''
-	Build boosting
-
-	Inputs: X_train, X_test, y_train, y_test
-
-	Returns: y_test, y_pred, pred_scores
-	'''
-	boost = AdaBoostClassifier()
-	boost.fit(X_train, y_train)
-	y_pred = boost.predict(X_test)
-	pred_scores = boost.predict_proba(X_test)
-	return y_test, y_pred, pred_scores
 
 
-##BAGGING##
-def bagging(X_train, X_test, y_train, y_test):
-	'''
-	Build bagging
-
-	Inputs: X_train, X_test, y_train, y_test
-
-	Returns: y_test, y_pred, pred_scores
-	'''
-	bagging = BaggingClassifier()
-	bagging.fit(X_train, y_train)
-	y_pred = bagging.predict(X_test)
-	pred_scores = bagging.predict_proba(X_test)
-	return y_test, y_pred, pred_scores
 
 
-####6)EVALUATE-CLASSIFIER####
-def calc_accuracy(y_test, y_pred):
-	'''
-	Returns the accuracy score based on the given test data 
-
-	Inputs: y_test, y_pred
-
-	Returns: accuracy score * 100
-	'''
-	return accuracy_score(y_test, y_pred)*100
+#Review below and delete before submit#
 
 
 def calc_confusion_matrix(y_test, y_pred, columns=None, index=None):
