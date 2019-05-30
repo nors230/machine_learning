@@ -377,7 +377,7 @@ def clf_loop_all_data(models_to_run, clfs, grid, train_test_dfs, pred_vars, dep_
 			print(period)
 			counter += 1
 
-			for index,clf in enumerate([clfs[x] for x in models_to_run]):
+			for index, clf in enumerate([clfs[x] for x in models_to_run]):
 				print(models_to_run[index])
 				parameter_values = grid[models_to_run[index]]
 				for p in ParameterGrid(parameter_values):
@@ -506,8 +506,6 @@ def clf_loop_all_data(models_to_run, clfs, grid, train_test_dfs, pred_vars, dep_
 
 
 
-
-
 ####END####
 ###############################################
 
@@ -525,62 +523,6 @@ def calc_confusion_matrix(y_test, y_pred, columns=None, index=None):
 	'''
 	return pd.DataFrame(confusion_matrix(y_test, y_pred), columns, index)
 
-
-def calc_precision(y_test, y_pred):
-	'''
-	Calculate precision
-
-	Inputs: y_test, y_pred
-
-	Returns: precision score
-	'''
-	return precision_score(y_test, y_pred)
-
-
-def calc_recall(y_test, y_pred):
-	'''
-	Calculate recall
-
-	Inputs: y_test, y_pred
-
-	Returns: recall score
-	'''
-	return recall_score(y_test, y_pred)
-
-
-def calc_f1(y_test, y_pred):
-	'''
-	Calculate f1
-
-	Inputs: y_test, y_pred
-
-	Returns: f1 score
-	'''
-	return f1_score(y_test, y_pred)
-
-
-def calc_auc_roc(y_test, pred_scores):
-	'''
-	Calculate auc_roc
-
-	Inputs: y_test, pred_scores
-
-	Returns: auc_roc score
-	'''
-	return roc_auc_score(y_test, pred_scores)
-
-
-def plot_precision_recall(predicted_scores, true_labels):
-	'''
-	Plot precision-recall curve
-
-	Inputs: predicted_scores, true_labels
-
-	Returns: plots
-	'''
-	precision, recall, thresholds = precision_recall_curve(true_labels, predicted_scores)
-	plt.plot(recall, precision, marker='.')
-	plt.show()
 
 
 #BUILD A CALC TABLE FOR DIFFERENT THRESHOLDS, REUSABLE ACROSS DATA
