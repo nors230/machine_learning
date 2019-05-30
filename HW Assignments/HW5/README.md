@@ -1,4 +1,4 @@
-This is the submission for HW3.
+This is the submission for HW5 - Revision of HW3.
 
 pipline_hw3.py : this document has the pipeline - contains all the functions for reading, processing data, generating features, building models. etc. New functions for this assignment are added here as well.
 
