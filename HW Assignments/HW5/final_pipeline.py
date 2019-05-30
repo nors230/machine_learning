@@ -190,39 +190,39 @@ def train_test_split(df, pred_vars, dep_var):
 #test 3: 7/1/2013 to 10/31/2013 with 10/31 to 12/31 for evaluation/getting labels
 
 def temporal_validate(start_time, end_time, prediction_windows, outcome_days):
-    '''
-    Identifies times at which to split data into training and
-    test sets over time.
+	'''
+	Identifies times at which to split data into training and
+	test sets over time.
 
-    Input:
-    start_time: start time of data
-    end_time: last date of data, including labels and outcomes that we have
-    prediction_windows: a list of how far out we want to predict, in months
-    outcome_days: number of days needed to evaluate the outcome
+	Input:
+	start_time: start time of data
+	end_time: last date of data, including labels and outcomes that we have
+	prediction_windows: a list of how far out we want to predict, in months
+	outcome_days: number of days needed to evaluate the outcome
 
-    Returns:
-    a list of training set start and end time, and testing set start and end time,
-    for each temporally validated dataset
+	Returns:
+	a list of training set start and end time, and testing set start and end time,
+	for each temporally validated dataset
 
-    Adapted with permission from Rayid Ghani: https://github.com/rayidghani/magicloops
-    '''
-    splits = []
-    start_time_date = datetime.strptime(start_time, '%Y-%m-%d')
-    end_time_date = datetime.strptime(end_time, '%Y-%m-%d')
-    actual_end_time_date = end_time_date - relativedelta(days=+(outcome_days+1))
+	Adapted with permission from Rayid Ghani: https://github.com/rayidghani/magicloops
+	'''
+	splits = []
+	start_time_date = datetime.strptime(start_time, '%Y-%m-%d')
+	end_time_date = datetime.strptime(end_time, '%Y-%m-%d')
+	actual_end_time_date = end_time_date - relativedelta(days=+(outcome_days+1))
 
-    for prediction_window in prediction_windows:
-        on_window = 1
-        test_end_time = start_time_date
-        while (actual_end_time_date > test_end_time):
-            train_start_time = start_time_date
-            train_end_time = train_start_time + on_window * relativedelta(months=+prediction_window) - relativedelta(days=+(outcome_days+2))
-            test_start_time = train_start_time + on_window * relativedelta(months=+prediction_window)
-            test_end_time = test_start_time + relativedelta(months=+prediction_window) - relativedelta(days=+(outcome_days+2))
-            splits.append([train_start_time, train_end_time, test_start_time, test_end_time])
-            on_window += 1
+	for prediction_window in prediction_windows:
+		on_window = 1
+		test_end_time = start_time_date
+		while (actual_end_time_date > test_end_time):
+			train_start_time = start_time_date
+			train_end_time = train_start_time + on_window * relativedelta(months=+prediction_window) - relativedelta(days=+(outcome_days+2))
+			test_start_time = train_start_time + on_window * relativedelta(months=+prediction_window)
+			test_end_time = test_start_time + relativedelta(months=+prediction_window) - relativedelta(days=+(outcome_days+2))
+			splits.append([train_start_time, train_end_time, test_start_time, test_end_time])
+			on_window += 1
 
-    return splits
+	return splits
 
 
 def temporal_split_train_test_dfs(df, splits):
@@ -261,29 +261,29 @@ The following code used with permission:
 https://github.com/rayidghani/magicloops/blob/master/simpleloop.py, credit to Rayid Ghani
 '''
 def define_clfs_params():
-    
-    clfs = {
- 		'BG': BaggingClassifier(n_estimators=10),
-	    'RF': RandomForestClassifier(n_estimators=50, n_jobs=-1),
-        'LR': LogisticRegression(penalty='l1', C=1e5),
-        'SVM': svm.LinearSVC(random_state=0, penalty='l1', dual=False),
-        'GB': GradientBoostingClassifier(learning_rate=0.05, subsample=0.5, max_depth=6, n_estimators=10),
-        'DT': DecisionTreeClassifier(),
-        'KNN': KNeighborsClassifier(n_neighbors=3),
-        'NB': GaussianNB()}
+	
+	clfs = {
+		'BG': BaggingClassifier(n_estimators=10),
+		'RF': RandomForestClassifier(n_estimators=50, n_jobs=-1),
+		'LR': LogisticRegression(penalty='l1', C=1e5),
+		'SVM': svm.LinearSVC(random_state=0, penalty='l1', dual=False),
+		'GB': GradientBoostingClassifier(learning_rate=0.05, subsample=0.5, max_depth=6, n_estimators=10),
+		'DT': DecisionTreeClassifier(),
+		'KNN': KNeighborsClassifier(n_neighbors=3),
+		'NB': GaussianNB()}
 
-    grid = {
-        'BG': {'n_estimators': [10,100]}, 
-        'RF': {'n_estimators': [1,10,100], 'max_depth': [1,5,10,20], 'max_features': ['sqrt','log2']},
-        'LR': { 'penalty': ['l1','l2'], 'C': [0.01,0.1,1,10]},
-        'GB': {'n_estimators': [1,10,100], 'learning_rate' : [0.05,0.1,0.5],'subsample' : [0.5,1.0], 'max_depth': [10,20,50]},
-        'DT': {'criterion': ['gini', 'entropy'], 'max_depth': [1,5,10]},
-        'SVM' :{'penalty':['l1','l2'], 'C' :[0.01,0.1,1]},
-        'KNN' :{'n_neighbors': [1,5,10,25],'weights': ['uniform','distance']},
-        'NB': {}
-        }
-    
-    return clfs, grid
+	grid = {
+		'BG': {'n_estimators': [10,100]}, 
+		'RF': {'n_estimators': [1,10,100], 'max_depth': [1,5,10,20], 'max_features': ['sqrt','log2']},
+		'LR': { 'penalty': ['l1','l2'], 'C': [0.01,0.1,1,10]},
+		'GB': {'n_estimators': [1,10,100], 'learning_rate' : [0.05,0.1,0.5],'subsample' : [0.5,1.0], 'max_depth': [10,20,50]},
+		'DT': {'criterion': ['gini', 'entropy'], 'max_depth': [1,5,10]},
+		'SVM' :{'penalty':['l1','l2'], 'C' :[0.01,0.1,1]},
+		'KNN' :{'n_neighbors': [1,5,10,25],'weights': ['uniform','distance']},
+		'NB': {}
+		}
+	
+	return clfs, grid
 
 
 def models_to_run():
@@ -291,31 +291,31 @@ def models_to_run():
 	models_to_run = ['RF', 'AB', 'DT', 'GB', 'SVM', 'KNN', 'LR', 'BG']
 
 	return models_to_run
-    
+	
 
 def joint_sort_descending(l1, l2):
-    idx = np.argsort(l1)[::-1]
-    return l1[idx], l2[idx]
+	idx = np.argsort(l1)[::-1]
+	return l1[idx], l2[idx]
 
 
 def generate_binary_at_k(y_scores, k):
-    cutoff_index = int(len(y_scores) * (k / 100.0))
-    test_predictions_binary = [1 if x < cutoff_index else 0 for x in range(len(y_scores))]
-    return test_predictions_binary
+	cutoff_index = int(len(y_scores) * (k / 100.0))
+	test_predictions_binary = [1 if x < cutoff_index else 0 for x in range(len(y_scores))]
+	return test_predictions_binary
 
 
 def precision_at_k(y_true, y_scores, k):
-    y_scores, y_true = joint_sort_descending(np.array(y_scores), np.array(y_true))
-    preds_at_k = generate_binary_at_k(y_scores, k)
-    precision = precision_score(y_true, preds_at_k)
-    return precision
+	y_scores, y_true = joint_sort_descending(np.array(y_scores), np.array(y_true))
+	preds_at_k = generate_binary_at_k(y_scores, k)
+	precision = precision_score(y_true, preds_at_k)
+	return precision
 
 
 def recall_at_k(y_true, y_scores, k):
-    y_scores, y_true = joint_sort_descending(np.array(y_scores), np.array(y_true))
-    preds_at_k = generate_binary_at_k(y_scores, k)
-    recall = recall_score(y_true, preds_at_k)
-    return recall
+	y_scores, y_true = joint_sort_descending(np.array(y_scores), np.array(y_true))
+	preds_at_k = generate_binary_at_k(y_scores, k)
+	recall = recall_score(y_true, preds_at_k)
+	return recall
 
 
 def f1_at_k(y_true, y_scores, k):
@@ -325,88 +325,46 @@ def f1_at_k(y_true, y_scores, k):
 
 
 def plot_precision_recall_n(y_true, y_prob, model_name):
-    from sklearn.metrics import precision_recall_curve
-    y_score = y_prob
-    precision_curve, recall_curve, pr_thresholds = precision_recall_curve(y_true, y_score)
-    precision_curve = precision_curve[:-1]
-    recall_curve = recall_curve[:-1]
-    pct_above_per_thresh = []
-    number_scored = len(y_score)
-    for value in pr_thresholds:
-        num_above_thresh = len(y_score[y_score>=value])
-        pct_above_thresh = num_above_thresh / float(number_scored)
-        pct_above_per_thresh.append(pct_above_thresh)
-    pct_above_per_thresh = np.array(pct_above_per_thresh)
-    
-    plt.clf()
-    fig, ax1 = plt.subplots()
-    ax1.plot(pct_above_per_thresh, precision_curve, 'b')
-    ax1.set_xlabel('percent of population')
-    ax1.set_ylabel('precision', color='b')
-    ax2 = ax1.twinx()
-    ax2.plot(pct_above_per_thresh, recall_curve, 'r')
-    ax2.set_ylabel('recall', color='r')
-    ax1.set_ylim([0,1])
-    ax1.set_ylim([0,1])
-    ax2.set_xlim([0,1])
+	from sklearn.metrics import precision_recall_curve
+	y_score = y_prob
+	precision_curve, recall_curve, pr_thresholds = precision_recall_curve(y_true, y_score)
+	precision_curve = precision_curve[:-1]
+	recall_curve = recall_curve[:-1]
+	pct_above_per_thresh = []
+	number_scored = len(y_score)
+	for value in pr_thresholds:
+		num_above_thresh = len(y_score[y_score>=value])
+		pct_above_thresh = num_above_thresh / float(number_scored)
+		pct_above_per_thresh.append(pct_above_thresh)
+	pct_above_per_thresh = np.array(pct_above_per_thresh)
+	
+	plt.clf()
+	fig, ax1 = plt.subplots()
+	ax1.plot(pct_above_per_thresh, precision_curve, 'b')
+	ax1.set_xlabel('percent of population')
+	ax1.set_ylabel('precision', color='b')
+	ax2 = ax1.twinx()
+	ax2.plot(pct_above_per_thresh, recall_curve, 'r')
+	ax2.set_ylabel('recall', color='r')
+	ax1.set_ylim([0,1])
+	ax1.set_ylim([0,1])
+	ax2.set_xlim([0,1])
    
-    name = model_name
-    plt.title(name)
-    plt.show()
-    
-
-def clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test):
-    """Runs the loop using models_to_run, clfs, gridm and the data
-    """
-    results_df = pd.DataFrame(columns=('model_type', 'clf', 'parameters','auc-roc','p_at_1', 'p_at_2', 'p_at_5',
-                                        'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 'f1_at_1',
-                                        'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
-    for index,clf in enumerate([clfs[x] for x in models_to_run]):
-        print(models_to_run[index])
-        parameter_values = grid[models_to_run[index]]
-        for p in ParameterGrid(parameter_values):
-            clf.set_params(**p)
-            if 'SVM'in models_to_run[index]:
-                y_pred_probs = clf.fit(X_train, y_train).decision_function(X_test)
-            else:
-                y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:,1]
-            y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
-            results_df.loc[len(results_df)] = [models_to_run[index], clf, p,
-                                              roc_auc_score(y_test, y_pred_probs),
-
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
-                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
-
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
-                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
-
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
-                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
-            
-            plot_precision_recall_n(y_test,y_pred_probs,clf)
-
-    return results_df
+	name = model_name
+	plt.title(name)
+	plt.show()
 
 
-def run_all(train_test_dfs, pred_vars, dep_var, models_to_run, clfs, grid):
-	'''
-	'''
-	results_dfs = []
+#run all models on all data, including temporal splits
+def clf_loop_all_data(models_to_run, clfs, grid, train_test_dfs, pred_vars, dep_var):
+	"""Runs the loop using models_to_run, clfs, gridm and the data
+	"""
+	results_df = pd.DataFrame(columns=('time_period', 'model_type', 'clf', 'parameters','auc-roc',
+										'p_at_1', 'p_at_2', 'p_at_5', 'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 
+										'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 
+										'f1_at_1', 'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
+	counter = 1
+
 	for i, df in enumerate(train_test_dfs):
 		if i % 2 == 0:
 			train_df = train_test_dfs[i]
@@ -415,82 +373,143 @@ def run_all(train_test_dfs, pred_vars, dep_var, models_to_run, clfs, grid):
 			y_train = train_df[dep_var]
 			X_test = test_df[pred_vars]
 			y_test = test_df[dep_var]
-			period = "train_test_data_period" + "_" + str(i + 1)
+			period = "train_test_data_period" + "_" + str(counter)
 			print(period)
-			result = clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test)
-			results_dfs.append((result, period))
+			counter += 1
 
-	return results_dfs
+			for index,clf in enumerate([clfs[x] for x in models_to_run]):
+				print(models_to_run[index])
+				parameter_values = grid[models_to_run[index]]
+				for p in ParameterGrid(parameter_values):
+					clf.set_params(**p)
+					if 'SVM'in models_to_run[index]:
+						y_pred_probs = clf.fit(X_train, y_train).decision_function(X_test)
+					else:
+						y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:,1]
+					y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
+					results_df.loc[len(results_df)] = [period, models_to_run[index], clf, p,
+														roc_auc_score(y_test, y_pred_probs),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
+														precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+														recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+														f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
+					plot_precision_recall_n(y_test,y_pred_probs,clf)
+	
+	return results_df
 
 
 
 
 
 
-def clf_loop_2(models_to_run, clfs, grid, train_test_dfs):
-    """Runs the loop using models_to_run, clfs, gridm and the data
-    """
-    results_df = pd.DataFrame(columns=('time_period', 'model_type', 'clf', 'parameters','auc-roc','p_at_1', 'p_at_2', 'p_at_5',
-                                        'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 'f1_at_1',
-                                        'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
-    
-    for i, df in enumerate(train_test_dfs):
-    	if i % 2 == 0:
-    		train_df = train_test_dfs[i]
-    		test_df = train_test_dfs[i + 1]
-    		X_train = train_df[pred_vars]
-    		y_train = train_df[dep_var]
-    		X_test = test_df[pred_vars]
-    		y_test = test_df[dep_var]
-    		period = "train_test_data_period" + "_" + str(i + 1)
 
-    		for index,clf in enumerate([clfs[x] for x in models_to_run]):
-		    	print(models_to_run[index])
-		    	parameter_values = grid[models_to_run[index]]
-		    	for p in ParameterGrid(parameter_values):
-		        	clf.set_params(**p)
-		        	if 'SVM'in models_to_run[index]:
-		            	y_pred_probs = clf.fit(X_train, y_train).decision_function(X_test)
-		        	else:
-		                y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:,1]
-		            y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
-		            results_df.loc[len(results_df)] = [period, models_to_run[index], clf, p,
-		                                              roc_auc_score(y_test, y_pred_probs),
 
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
-		                                              precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
 
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
-		                                              recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
 
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
-		                                              f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
-		            
-		            plot_precision_recall_n(y_test,y_pred_probs,clf)
 
-    return results_df
+	
+
+# def clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test):
+# 	"""Runs the loop using models_to_run, clfs, gridm and the data
+# 	"""
+# 	results_df = pd.DataFrame(columns=('model_type', 'clf', 'parameters','auc-roc','p_at_1', 'p_at_2', 'p_at_5',
+# 										'p_at_10', 'p_at_20', 'p_at_30', 'p_at_50', 'r_at_1', 'r_at_2', 'r_at_5', 'r_at_10', 'r_at_20', 'r_at_30', 'r_at_50', 'f1_at_1',
+# 										'f1_at_2', 'f1_at_5', 'f1_at_10', 'f1_at_20', 'f1_at_30', 'f1_at_50'))
+	
+# 	for index,clf in enumerate([clfs[x] for x in models_to_run]):
+# 		print(models_to_run[index])
+# 		parameter_values = grid[models_to_run[index]]
+# 		for p in ParameterGrid(parameter_values):
+# 			clf.set_params(**p)
+# 			if 'SVM'in models_to_run[index]:
+# 				y_pred_probs = clf.fit(X_train, y_train).decision_function(X_test)
+# 			else:
+# 				y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:,1]
+# 			y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
+# 			results_df.loc[len(results_df)] = [models_to_run[index], clf, p,
+# 											  roc_auc_score(y_test, y_pred_probs),
+
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,1.0),
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,2.0),
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,5.0),
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,10.0),
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,20.0),
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,30.0),
+# 											  precision_at_k(y_test_sorted,y_pred_probs_sorted,50.0),
+
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+# 											  recall_at_k(y_test_sorted, y_pred_probs_sorted, 50.0),
+
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 1.0),
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 2.0),
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 20.0),
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 30.0),
+# 											  f1_at_k(y_test_sorted, y_pred_probs_sorted, 50.0)]
+			
+# 			plot_precision_recall_n(y_test,y_pred_probs,clf)
+
+# 	return results_df
+
+
+# def run_all(train_test_dfs, pred_vars, dep_var, models_to_run, clfs, grid):
+# 	'''
+# 	'''
+# 	results_dfs = []
+# 	for i, df in enumerate(train_test_dfs):
+# 		if i % 2 == 0:
+# 			train_df = train_test_dfs[i]
+# 			test_df = train_test_dfs[i + 1]
+# 			X_train = train_df[pred_vars]
+# 			y_train = train_df[dep_var]
+# 			X_test = test_df[pred_vars]
+# 			y_test = test_df[dep_var]
+# 			period = "train_test_data_period" + "_" + str(i + 1)
+# 			print(period)
+# 			result = clf_loop(models_to_run, clfs, grid, X_train, X_test, y_train, y_test)
+# 			results_dfs.append((result, period))
+
+# 	return results_dfs
+
+
+
+
+
+
+
+
+
+##########TEST##############
+
+
+
+
 
 ####END####
 ###############################################
-
-
-
-
 
 
 #Review below and delete before submit#
