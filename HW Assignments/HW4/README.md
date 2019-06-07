@@ -18,17 +18,7 @@ A. merge several clusters into one
 B. recluster with a new k
 C. Split a specific cluster into many (with a specific number of new clustering)
 
-
-
-
-
-
-
-
 7. Report:
 You should also write a short report (~2 pages) that compares the performance of the different classifiers across all the metrics for the data set used in this assignment (the donorschoose data). Which classifier does better on which metrics? How do the results change over time? What would be your recommendation to someone who's working on this model to identify 5% of posted projects that are at highest risk of not getting fully funded to intervene with, which model should they decide to go forward with and deploy?
 The report should not be a list of graphs and numbers. It needs to explain to a policy audience the implications of your analysis and your recommendations as a memo you would send to a policy audience.
-^Google Drive Link for Report: https://docs.google.com/document/d/1tGzfA_6Yb5iH2rBQCFPBXc2o-jXF3zAVhB36CyhyjnQ/edit?usp=sharing
-
-
-
+^Google Drive Link for Report: https://docs.google.com/document/d/1pb1V_TDCfgG1SIT6xsoC-K2horsn_G2hs3nMus8D3bo/edit?usp=sharing
